@@ -54,7 +54,7 @@ export default function CanvasListPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ width: 64, height: 64 })
+        body: JSON.stringify({ width: 16, height: 16 })
       });
       if (res.ok) {
         const data = await res.json();
