@@ -255,9 +255,25 @@ export default function CanvasDetailRoomPage() {
           boxShadow: 'var(--shadow-xl)',
           background: '#fff',
           borderRadius: '4px',
-          padding: '1px', // for border effect
-          display: 'flex'
+          padding: '1px',
+          display: 'flex',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
+          {/* Grid Overlay Layer */}
+          <div style={{
+            position: 'absolute',
+            top: 1,
+            left: 1,
+            width: canvasInfo ? canvasInfo.width * scale : 0,
+            height: canvasInfo ? canvasInfo.height * scale : 0,
+            pointerEvents: 'none',
+            zIndex: 5,
+            backgroundImage: `linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)`,
+            backgroundSize: `${scale}px ${scale}px`,
+            opacity: scale > 4 ? 0.5 : 0 // Only show grid when zoomed in enough
+          }} />
+          
           <canvas
             ref={canvasRef}
             onPointerDown={handlePointerDown}
@@ -270,7 +286,8 @@ export default function CanvasDetailRoomPage() {
               imageRendering: 'pixelated',
               cursor: 'crosshair',
               background: '#fff',
-              touchAction: 'none'
+              touchAction: 'none',
+              zIndex: 1
             }}
           />
         </div>
