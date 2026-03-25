@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
-import { ArrowLeft, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, ZoomIn, ZoomOut, Plus } from 'lucide-react';
 
 export default function CanvasDetailRoomPage() {
   const { id } = useParams<{ id: string }>();
@@ -92,6 +92,36 @@ export default function CanvasDetailRoomPage() {
           }
         });
 
+        localSocket.on('canvasResized', (payload) => {
+          const { width, height, pixelData } = payload;
+          setCanvasInfo({ width, height });
+          const canvas = canvasRef.current;
+          if (canvas) {
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              const binary = atob(pixelData);
+              const buffer = new Uint8Array(binary.length);
+              for (let i = 0; i < binary.length; i++) {
+                buffer[i] = binary.charCodeAt(i);
+              }
+              const imageData = ctx.createImageData(width, height);
+              for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                  const srcOffset = (y * width + x) * 3;
+                  const dstOffset = (y * width + x) * 4;
+                  imageData.data[dstOffset] = buffer[srcOffset];
+                  imageData.data[dstOffset + 1] = buffer[srcOffset + 1];
+                  imageData.data[dstOffset + 2] = buffer[srcOffset + 2];
+                  imageData.data[dstOffset + 3] = 255;
+                }
+              }
+              ctx.putImageData(imageData, 0, 0);
+            }
+          }
+        });
+
         localSocket.on('error', (message: string) => {
           console.error('Socket error:', message);
           // Show error toast ideally
@@ -111,6 +141,24 @@ export default function CanvasDetailRoomPage() {
       if (localSocket) localSocket.disconnect();
     };
   }, [id]);
+
+  const handleResize = async (direction: 'up' | 'down' | 'left' | 'right') => {
+    try {
+      const res = await fetch(`http://localhost:3100/canvas/${id}/resize`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ direction, amount: 1 })
+      });
+      if (!res.ok) {
+        throw new Error('Resize failed');
+      }
+    } catch (e) {
+      console.error(e);
+      setError('Failed to resize canvas');
+    }
+  };
 
   const drawPixelAt = useCallback((x: number, y: number) => {
     if (!canvasRef.current || !socket || !canvasInfo) return;
@@ -257,9 +305,46 @@ export default function CanvasDetailRoomPage() {
           borderRadius: '4px',
           padding: '1px',
           display: 'flex',
-          position: 'relative',
-          overflow: 'hidden'
+          position: 'relative'
         }}>
+          {/* Resize Buttons */}
+          <button 
+            onClick={() => handleResize('up')}
+            style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', width: 32, height: 32, borderRadius: '50%', background: '#fff', boxShadow: 'var(--shadow-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+            title="Expand Canvas Up"
+          >
+            <Plus size={16} />
+          </button>
+          <button 
+            onClick={() => handleResize('down')}
+            style={{ position: 'absolute', bottom: -40, left: '50%', transform: 'translateX(-50%)', width: 32, height: 32, borderRadius: '50%', background: '#fff', boxShadow: 'var(--shadow-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+            title="Expand Canvas Down"
+          >
+            <Plus size={16} />
+          </button>
+          <button 
+            onClick={() => handleResize('left')}
+            style={{ position: 'absolute', left: -40, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: '#fff', boxShadow: 'var(--shadow-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+            title="Expand Canvas Left"
+          >
+            <Plus size={16} />
+          </button>
+          <button 
+            onClick={() => handleResize('right')}
+            style={{ position: 'absolute', right: -40, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, borderRadius: '50%', background: '#fff', boxShadow: 'var(--shadow-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+            title="Expand Canvas Right"
+          >
+            <Plus size={16} />
+          </button>
+
           {/* Grid Overlay Layer */}
           <div style={{
             position: 'absolute',
