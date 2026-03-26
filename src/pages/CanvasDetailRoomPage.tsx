@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { ArrowLeft, ZoomIn, ZoomOut, Plus } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3100';
+
 export default function CanvasDetailRoomPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ export default function CanvasDetailRoomPage() {
 
     const init = async () => {
       try {
-        const res = await fetch(`http://localhost:3100/canvas/${id}`);
+        const res = await fetch(`${API_URL}/canvas/${id}`);
         if (!res.ok) {
           if (res.status === 404) setError('Canvas not found');
           else setError('Failed to load canvas data');
@@ -65,7 +67,7 @@ export default function CanvasDetailRoomPage() {
         }
 
         // Connect to Socket.IO namespace
-        localSocket = io('http://localhost:3100/canvas', {
+        localSocket = io(`${API_URL}/canvas`, {
           query: { canvasId: id },
           transports: ['websocket'],
         });
@@ -144,7 +146,7 @@ export default function CanvasDetailRoomPage() {
 
   const handleResize = async (direction: 'up' | 'down' | 'left' | 'right') => {
     try {
-      const res = await fetch(`http://localhost:3100/canvas/${id}/resize`, {
+      const res = await fetch(`${API_URL}/canvas/${id}/resize`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

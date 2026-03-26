@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3100';
+
 interface CanvasItem {
   canvasId: number;
   width: number;
@@ -23,7 +25,7 @@ export default function CanvasListPage() {
   const fetchCanvases = async (pageNum: number) => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:3100/canvas?page=${pageNum}&limit=20`);
+      const res = await fetch(`${API_URL}/canvas?page=${pageNum}&limit=20`);
       if (res.ok) {
         const data = await res.json();
         if (pageNum === 1) {
@@ -49,7 +51,7 @@ export default function CanvasListPage() {
 
   const handleCreate = async () => {
     try {
-      const res = await fetch('http://localhost:3100/canvas', {
+      const res = await fetch(`${API_URL}/canvas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
