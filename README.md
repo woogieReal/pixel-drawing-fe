@@ -37,22 +37,5 @@
 
 ## 💻 로컬 구동 방법 (How to run locally)
 
-1. **저장소 클론 및 폴더 이동**
-
-   ```bash
-   cd pixel-drawing-fe
-   ```
-
-2. **패키지 설치 및 의존성 추가**
-
-   ```bash
-   npm install
-   ```
-
-3. **로컬 개발서버 띄우기**
-
-   ```bash
-   npm run dev
-   ```
-
-> **단,** 백엔드 Socket 서버는 기본적으로 `http://localhost:3100` 포트를 기준으로 통신하도록 설계되어 있으므로 먼저 백엔드 API 서버를 구동해 주셔야 정상적인 소켓 연결 및 리스트 조회가 가능합니다!
+본 프로젝트는 상위 `pixel-drawing-app` 루트 디렉토리에서 `docker-compose`를 통하여 백엔드 프로젝트와 함께 통합 실행하는 것을 권장합니다.
+상세한 통합 실행 방법은 [루트 디렉토리의 README.md](../README.md)를 참고해 주세요.
