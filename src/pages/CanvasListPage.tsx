@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3100';
 
@@ -109,6 +109,20 @@ export default function CanvasListPage() {
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent, canvasId: number) => {
+    e.stopPropagation();
+    if (!window.confirm(`캔버스 #${canvasId}를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) return;
+
+    try {
+      const res = await fetch(`${API_URL}/canvas/${canvasId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setItems(prev => prev.filter(item => item.canvasId !== canvasId));
+      }
+    } catch (e) {
+      console.error('Failed to delete canvas', e);
+    }
+  };
+
   const handleCreate = async () => {
     try {
       const res = await fetch(`${API_URL}/canvas`, {
@@ -152,6 +166,7 @@ export default function CanvasListPage() {
               display: 'flex',
               flexDirection: 'column',
               gap: '0.5rem',
+              position: 'relative',
             }}
             onClick={() => navigate(`/canvas/${item.canvasId}`)}
             onMouseEnter={e => {
@@ -163,6 +178,35 @@ export default function CanvasListPage() {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
+            <button
+              onClick={(e) => handleDelete(e, item.canvasId)}
+              style={{
+                position: 'absolute',
+                top: '0.5rem',
+                right: '0.5rem',
+                width: '2rem',
+                height: '2rem',
+                borderRadius: '50%',
+                background: 'transparent',
+                color: 'var(--text-tertiary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1,
+                transition: 'var(--transition)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = '#fee2e2';
+                e.currentTarget.style.color = '#ef4444';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+              }}
+              title="캔버스 삭제"
+            >
+              <Trash2 size={14} />
+            </button>
             <CanvasThumbnail thumbnail={item.thumbnail} width={item.width} height={item.height} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>#{item.canvasId}</span>

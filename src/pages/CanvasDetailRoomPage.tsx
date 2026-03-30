@@ -124,6 +124,11 @@ export default function CanvasDetailRoomPage() {
           }
         });
 
+        localSocket.on('canvasDeleted', () => {
+          alert('이 캔버스가 삭제되었습니다.');
+          navigate('/canvas');
+        });
+
         localSocket.on('error', (message: string) => {
           console.error('Socket error:', message);
           // Show error toast ideally
