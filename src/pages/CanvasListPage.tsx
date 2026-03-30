@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 
@@ -9,6 +9,66 @@ interface CanvasItem {
   width: number;
   height: number;
   updatedAt: string;
+  thumbnail: string | null; // base64 RGB
+}
+
+function CanvasThumbnail({ thumbnail, width, height }: { thumbnail: string | null; width: number; height: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el || !thumbnail) return;
+
+    const thumbW = Math.min(width, 64);
+    const thumbH = Math.min(height, 64);
+    el.width = thumbW;
+    el.height = thumbH;
+
+    const ctx = el.getContext('2d');
+    if (!ctx) return;
+
+    const binary = atob(thumbnail);
+    const imageData = ctx.createImageData(thumbW, thumbH);
+    for (let i = 0; i < thumbW * thumbH; i++) {
+      imageData.data[i * 4]     = binary.charCodeAt(i * 3);
+      imageData.data[i * 4 + 1] = binary.charCodeAt(i * 3 + 1);
+      imageData.data[i * 4 + 2] = binary.charCodeAt(i * 3 + 2);
+      imageData.data[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }, [thumbnail, width, height]);
+
+  if (!thumbnail) {
+    return (
+      <div style={{
+        width: '100%',
+        aspectRatio: '1',
+        background: 'var(--bg-secondary)',
+        borderRadius: 'var(--radius-md)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--text-tertiary)',
+        fontSize: '0.75rem',
+      }}>
+        No preview
+      </div>
+    );
+  }
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        width: '100%',
+        aspectRatio: '1',
+        borderRadius: 'var(--radius-md)',
+        imageRendering: 'pixelated',
+        objectFit: 'contain',
+        background: '#fff',
+      }}
+    />
+  );
 }
 
 export default function CanvasListPage() {
@@ -78,22 +138,20 @@ export default function CanvasListPage() {
         marginBottom: '2rem'
       }}>
         {items.map(item => (
-          <div 
-            key={item.canvasId} 
+          <div
+            key={item.canvasId}
             className="canvas-card"
             style={{
               background: '#fff',
               borderRadius: 'var(--radius-lg)',
               boxShadow: 'var(--shadow-sm)',
-              padding: '1.5rem',
+              padding: '1rem',
               cursor: 'pointer',
               transition: 'var(--transition)',
               border: '1px solid var(--border-color)',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              aspectRatio: '1'
+              gap: '0.5rem',
             }}
             onClick={() => navigate(`/canvas/${item.canvasId}`)}
             onMouseEnter={e => {
@@ -105,13 +163,12 @@ export default function CanvasListPage() {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--accent-color)' }}>
-              #{item.canvasId}
+            <CanvasThumbnail thumbnail={item.thumbnail} width={item.width} height={item.height} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>#{item.canvasId}</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{item.width} x {item.height}</span>
             </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-              {item.width} x {item.height}
-            </div>
-            <div style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', marginTop: '1rem' }}>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
               {new Date(item.updatedAt).toLocaleDateString()}
             </div>
           </div>
